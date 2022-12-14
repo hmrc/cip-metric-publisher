@@ -8,8 +8,29 @@ cip-metric-publisher is used for publishing data from a Goggle Sheet to a Google
 Two formats of Google sheet are supported, one to support a list of keys and values by month, and a second to support Google Analytics reports.
 
 ## The Google Sheet Library Integration
-To include this library, open the document, then click Extensions -> Apps Script 
+To include this library, open the document, then click Extensions -> Apps Script from the menu. Then select the Editor section and click + symbol next to Libraries to add a libarry.
 
+Used this Script ID, clicking Look up:
+1ko-K-TeOxLKeSceATrC1nExdwXnniOJfKyS2zWO31dDCIxXkK_Fehg-s
+
+Select the version of the library you want to use, leaving the Identifier as the default "CIPMetricPublisher". Click Add.
+
+Add this code snippet to your code.gs file.
+
+```function onOpen() {
+   CIPMetricPublisher.configurePublishMenu()
+}
+
+function publishDataHandler (){
+  CIPMetricPublisher.publishDataHandler()
+}
+
+function publishLastFileHandler (){
+  CIPMetricPublisher.publishLastFileHandler()
+}
+```
+
+Reload the Google Sheet, and after a short time you should see a "CIP Publish" menu appear in the menu bar.
 
 ## The Google Sheet Format
 A Google Sheet represents the source of data, and is in one of two formats
