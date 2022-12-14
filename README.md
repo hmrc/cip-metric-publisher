@@ -16,10 +16,10 @@ A Google Sheet represents the source of data, and is in one of two formats
 
 ### Key / Month matrix
 
-| Metric ID  | ...  | ...  | month1 date | month2 date | month3 date |
-| :---	     | :--- | :--- |             |             |             |
-| unique-id1 |      |      | month1 val  | month2 val  | month3 val  |
-| unique-id2 |      |      | month1 val  | month2 val  | month3 val  |
+Metric ID  | | | month1 date | month2 date | month3 date
+:-----    | :------ | :------ | :------     | :-------    |
+unique-id1 |      |      | month1 val  | month2 val  | month3 val
+unique-id2 |      |      | month1 val  | month2 val  | month3 val
 
 The column "Metric ID" is the marker for the column of unique metric identifiers. Columns titles with values should contain a date, where the date is any date in the month to which the metric value is attirbuted. Testing has been conducted using a 1st day of month, but any date in the month should suffice.
 
