@@ -10,14 +10,16 @@ Two formats of Google sheet are supported, one to support a list of keys and val
 ## The Google Sheet Library Integration
 To include this library, open the document, then click Extensions -> Apps Script from the menu. Then select the Editor section and click + symbol next to Libraries to add a libarry.
 
-Used this Script ID, clicking Look up:
+Enter this Script ID and then click Look Up:
+
 1ko-K-TeOxLKeSceATrC1nExdwXnniOJfKyS2zWO31dDCIxXkK_Fehg-s
 
 Select the version of the library you want to use, leaving the Identifier as the default "CIPMetricPublisher". Click Add.
 
 Add this code snippet to your code.gs file.
 
-```function onOpen() {
+```
+function onOpen() {
    CIPMetricPublisher.configurePublishMenu()
 }
 
