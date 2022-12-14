@@ -15,6 +15,7 @@ To include this library, open the document, then click Extensions -> Apps Script
 A Google Sheet represents the source of data, and is in one of two formats
 
 ### Key / Month matrix
+
 | Metric ID  | ... | ... | month1 date | month2 date | month3 date |
 | :---	     | :-- | :-- |             |             |             |
 | unique-id1 |     |     | month1 val  | month2 val  | month3 val  |
