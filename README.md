@@ -39,10 +39,10 @@ A Google Sheet represents the source of data, and is in one of two formats
 
 ### Key / Month matrix
 
-Metric ID  | | | month1 date | month2 date | month3 date
-:-----    | :------ | :------ | :------     | :-------    |
-unique-id1 |      |      | month1 val  | month2 val  | month3 val
-unique-id2 |      |      | month1 val  | month2 val  | month3 val
+|Metric ID  |     | month1 date | month2 date | month3 date
+|:-----    |:----| :------ | :------     | :-------    |
+|unique-id1 |     |      | month1 val  | month2 val  | month3 val
+|unique-id2 |     |      | month1 val  | month2 val  | month3 val
 
 The column "Metric ID" is the marker for the column of unique metric identifiers. Columns titles with values should contain a date, where the date is any date in the month to which the metric value is attirbuted. Testing has been conducted using a 1st day of month, but any date in the month should suffice.
 
@@ -52,7 +52,7 @@ To publish data for a particular month, select any row in the month you wish to 
 For Google Analytics report configuration format, we expect a format as follows:
 
 |              | Report Month | month date |             |             |             |
-| :---	       | :---         | :---       |             |             |             |
+| :---	       | :---         | :---       | :---        | :---        |:------------|
 | Report Name  | Report 1     | Report 2   | Report 3    | Report 4    | Report 5    |
 | Config 1     | setting 1    | setting 2  | setting 3   | setting 4   | setting 5   |
 | Config 2     | setting 1    | setting 2  | setting 3   | setting 4   | setting 5   |
@@ -88,7 +88,7 @@ To see this file in the Google AppsScript console, enable it in Project Settings
 - Node v12.20.1
 
 ### Install
-Install dependencies using: 
+Install dependencies using:
 ```shell
 npm ci
 ```
