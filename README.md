@@ -39,10 +39,10 @@ A Google Sheet represents the source of data, and is in one of two formats
 
 ### Key / Month matrix
 
-Metric ID  | | | month1 date | month2 date | month3 date
-:-----    | :------ | :------ | :------     | :-------    |
-unique-id1 |      |      | month1 val  | month2 val  | month3 val
-unique-id2 |      |      | month1 val  | month2 val  | month3 val
+|Metric ID  |     | month1 date | month2 date | month3 date
+|:-----    |:----| :------ | :------     | :-------    |
+|unique-id1 |     |      | month1 val  | month2 val  | month3 val
+|unique-id2 |     |      | month1 val  | month2 val  | month3 val
 
 The column "Metric ID" is the marker for the column of unique metric identifiers. Columns titles with values should contain a date, where the date is any date in the month to which the metric value is attirbuted. Testing has been conducted using a 1st day of month, but any date in the month should suffice.
 
@@ -52,7 +52,7 @@ To publish data for a particular month, select any row in the month you wish to 
 For Google Analytics report configuration format, we expect a format as follows:
 
 |              | Report Month | month date |             |             |             |
-| :---	       | :---         | :---       |             |             |             |
+| :---	       | :---         | :---       | :---        | :---        |:------------|
 | Report Name  | Report 1     | Report 2   | Report 3    | Report 4    | Report 5    |
 | Config 1     | setting 1    | setting 2  | setting 3   | setting 4   | setting 5   |
 | Config 2     | setting 1    | setting 2  | setting 3   | setting 4   | setting 5   |
@@ -65,10 +65,10 @@ For Google Analytics report configuration format, we expect a format as follows:
 | unique_id3   | value3       |            |             |             |             |
 | unique_id4   | value4       |            |             |             |             |
 
-In this format, the sheet reflects a single month of data. To publish the data, you can be anywhere in the sheet. Select the publish menu option as per Key/Month instructions above. The metrics will be published to the destination document.
+In this format, the sheet reflects a single month of data. To publish the data, you can be anywhere in the sheet, select the publish menu option as per Key/Month instructions above. The metrics will be published to the destination document.
 
 ## The Slide Document
-Page elements are marked to receive data by adding tag information to the Description field of the Alt Text information. This tagging specified the source metric identifier used to populate it. During the process of publishing, slide page elements are searched; any element with one of these tags where the source data has a matching metric identifier, it's data is replaced.
+Page elements are marked such that the source of data is specified via the Description field of the elements Alt Text information. This tagging specified the source metric identifier in the Metric ID column of the source sheet. During publishing, slide page elements are searched; any element with one of these tags where the source data has a matching metric identifier, the slide elements data is replaced. Any pre-existing formatting on the slide is unchanged.
 
 Supported tagging formats are:
 | Tag format   | Behaviour    |
@@ -88,7 +88,7 @@ To see this file in the Google AppsScript console, enable it in Project Settings
 - Node v12.20.1
 
 ### Install
-Install dependencies using: 
+Install dependencies using:
 ```shell
 npm ci
 ```
