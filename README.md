@@ -1,8 +1,6 @@
 
 # cip-metric-publisher
 
-This is a placeholder README.md for a new repository
-
 cip-metric-publisher is used for publishing data from a Goggle Sheet to a Google Slide document by use of markers in the Slide documnt to indicate the source of data.
 
 Two formats of Google sheet are supported, one to support a list of keys and values by month, and a second to support Google Analytics reports.
@@ -39,10 +37,10 @@ A Google Sheet represents the source of data, and is in one of two formats
 
 ### Key / Month matrix
 
-|Metric ID  |     | month1 date | month2 date | month3 date
-|:-----    |:----| :------ | :------     | :-------    |
-|unique-id1 |     |      | month1 val  | month2 val  | month3 val
-|unique-id2 |     |      | month1 val  | month2 val  | month3 val
+| Metric ID  |     | month1 date | month2 date | month3 date |
+|:-----------|:----|:------------|:------------|:------------|
+| unique-id1 |     | month1 val  | month2 val  | month3 val  |
+| unique-id2 |     | month1 val  | month2 val  | month3 val  |
 
 The column "Metric ID" is the marker for the column of unique metric identifiers. Columns titles with values should contain a date, where the date is any date in the month to which the metric value is attirbuted. Testing has been conducted using a 1st day of month, but any date in the month should suffice.
 
@@ -51,19 +49,19 @@ To publish data for a particular month, select any row in the month you wish to 
 ### Google Analytics Config format
 For Google Analytics report configuration format, we expect a format as follows:
 
-|              | Report Month | month date |             |             |             |
-| :---	       | :---         | :---       | :---        | :---        |:------------|
-| Report Name  | Report 1     | Report 2   | Report 3    | Report 4    | Report 5    |
-| Config 1     | setting 1    | setting 2  | setting 3   | setting 4   | setting 5   |
-| Config 2     | setting 1    | setting 2  | setting 3   | setting 4   | setting 5   |
-| Config 3     | setting 1    | setting 2  | setting 3   | setting 4   | setting 5   |
-| Config 4     | setting 1    | setting 2  | setting 3   | setting 4   | setting 5   |
-|              |              |            |             |             |             |
-| Metric ID    | Results      |            |             |             |             |
-| unique_id1   | value1       |            |             |             |             |
-| unique_id2   | value2       |            |             |             |             |
-| unique_id3   | value3       |            |             |             |             |
-| unique_id4   | value4       |            |             |             |             |
+|             | Report Month | month date |           |           |           |
+|:------------|:-------------|:-----------|:----------|:----------|:----------|
+| Report Name | Report 1     | Report 2   | Report 3  | Report 4  | Report 5  |
+| Config 1    | setting 1    | setting 2  | setting 3 | setting 4 | setting 5 |
+| Config 2    | setting 1    | setting 2  | setting 3 | setting 4 | setting 5 |
+| Config 3    | setting 1    | setting 2  | setting 3 | setting 4 | setting 5 |
+| Config 4    | setting 1    | setting 2  | setting 3 | setting 4 | setting 5 |
+|             |              |            |           |           |           |
+| Metric ID   | Results      |            |           |           |           |
+| unique_id1  | value1       |            |           |           |           |
+| unique_id2  | value2       |            |           |           |           |
+| unique_id3  | value3       |            |           |           |           |
+| unique_id4  | value4       |            |           |           |           |
 
 In this format, the sheet reflects a single month of data. To publish the data, you can be anywhere in the sheet, select the publish menu option as per Key/Month instructions above. The metrics will be published to the destination document.
 
@@ -71,10 +69,11 @@ In this format, the sheet reflects a single month of data. To publish the data, 
 Page elements are marked such that the source of data is specified via the Description field of the elements Alt Text information. This tagging specified the source metric identifier in the Metric ID column of the source sheet. During publishing, slide page elements are searched; any element with one of these tags where the source data has a matching metric identifier, the slide elements data is replaced. Any pre-existing formatting on the slide is unchanged.
 
 Supported tagging formats are:
-| Tag format   | Behaviour    |
-| :---	       | :---         |
-| Source: metricId | Replaces the textual content of the page element with that of the google sheet source. This uses the display format from the google sheet, so any google sheet cell rendering is honoured |
-| RotateImage: metricId | Used on images. Rotates the image if the metricId has a value of less than zero. Typically used on arrows |
+
+| Tag format            | Behaviour                                                                                                                                                                                                                                                                                                                                                     |
+|-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Source: metricId      | Replaces the textual content of the page element with that of the google sheet source. <br/>This uses the display format from the google sheet, so any google sheet cell rendering is honoured - unless the metricId has a suffix of '-percentage-change'. In this case, the value in the sheet will be made non-negative and formatted to be \'(*value* %)\' | 
+| RotateImage: metricId | Used on images. Rotates the image if the metricId has a value of less than zero. Typically used on arrows.                                                                                                                                                                                                                                                    |
 
 ### What is appsscript.json file?
 

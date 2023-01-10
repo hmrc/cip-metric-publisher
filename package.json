@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@google/clasp": "^2.4.2",
     "gas-lib": "^2.0.4"
   }
 }
