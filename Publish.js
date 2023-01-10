@@ -65,7 +65,7 @@ function publishLastFileHandler() {
 //
 function deriveMetricsConfiguration() {
   sheet = SpreadsheetApp.getActiveSheet()
-  var metricDate, regExp;
+  var metricDate, metricParseType;
 
   var reportMonthCellLocation = sheet.createTextFinder(REPORT_MONTH_TEXT).matchEntireCell(true).findNext();
   
@@ -146,7 +146,8 @@ function publishDataToGoogleSlideFile_processSlide(slide, valueMap) {
                     finalVal = '('+Math.abs(finalVal)+'%)'
                 }
                 Logger.log("Setting " + sourceId + " to " + finalVal)
-                element.asShape().getText().setText(finalVal)                
+                element.asShape().getText().setText(finalVal)
+                element.asShape().getText().getTextStyle().setBackgroundColorTransparent()
             }
         } else if (match && match.length===3 && match[1]==='RotateImage') {
             Logger.log("Found a shape to rotate...")
