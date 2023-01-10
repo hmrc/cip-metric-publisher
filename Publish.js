@@ -141,23 +141,27 @@ function publishDataToGoogleSlideFile_processSlide(slide, valueMap) {
                 var regExp2 = new RegExp('.*-percentage-change', "i"); 
                 var matchPercentageChange = regExp2.exec(sourceId);
                 var finalVal = valueMap[sourceId];
+                Logger.log("Processing value " + finalVal)
                 if (matchPercentageChange) {
                     Logger.log("Found a percentage change to construct");
-                    finalVal = '('+Math.abs(finalVal)+'%)'
+                    finalVal = '('+(finalVal.replace("%",""))+'%)'
                 }
                 Logger.log("Setting " + sourceId + " to " + finalVal)
                 element.asShape().getText().setText(finalVal)
                 element.asShape().getText().getTextStyle().setBackgroundColorTransparent()
             }
         } else if (match && match.length===3 && match[1]==='RotateImage') {
-            Logger.log("Found a shape to rotate...")
-            if (valueMap[match[2]] < 0) {
-              Logger.log("Rotating 180 degrees");
-              element.asShape().setRotation(180);
-            } else {
-               Logger.log("Rotating 0 degrees");
-              element.asShape().setRotation(0);
-            } 
+	    Logger.log("Processing rotate image: " + alt)
+            var sourceId = match[2]
+	    if (valueMap[sourceId]) {
+                if (valueMap[match[2]].replace("%","") < 0) {
+                  Logger.log("Rotating 180 degrees");
+                  element.asShape().setRotation(180);
+                } else if (valueMap[match[2]].replace("%","") >= 0) {
+                   Logger.log("Rotating 0 degrees");
+                  element.asShape().setRotation(0);
+                } 
+            }
         }
     }
 }
