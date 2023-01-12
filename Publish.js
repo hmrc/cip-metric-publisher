@@ -118,6 +118,34 @@ function deriveMetricsConfiguration() {
   return resultMap
 }
 
+//
+// Searches the current sheet for a graph of a particular name
+//
+function searchGraphByName (searchName) {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getActiveSheet();
+
+    var charts = sheet.getCharts()
+    var apiCharts = Sheets.Spreadsheets.get(ss.getId(), { ranges: [sheet.getSheetName()], fields: "sheets(charts)" }).sheets[0].charts;
+
+    for (var i = 0; i < apiCharts.length; i++) {
+        chart = apiCharts[i]
+        var { altText } = chart.spec;
+        if (altText) {
+            // Check whether the alt text graph name matches the search name
+            var regExp = new RegExp('.*(Graph): ([^\\s]+)', "i"); 
+            var match = regExp.exec(altText);
+            if (match) {
+                graphAltName = match[2]
+                if (graphAltName === searchName) {
+                    return (charts[i])
+                }
+            }
+        }
+    }
+    // Not found
+    return null
+}
 
 // Loop through each page element, and if it has a source marker, and we have value for it,
 // set the value of the element.
@@ -127,10 +155,10 @@ function publishDataToGoogleSlideFile_processSlide(slide, valueMap) {
 
     // Loop through elements identifying if any have Source references in the alt text
     for (var i = 0; i < elements.length; i++) {
-        element = elements[i]
-        alt = element.getDescription()
+        var element = elements[i]
+        var alt = element.getDescription()
 
-        var regExp = new RegExp('.*(Source|RotateImage): ([^\\s]+)', "i"); 
+        var regExp = new RegExp('.*(Source|RotateImage|Graph): ([^\\s]+)', "i"); 
         
         var match = regExp.exec(alt);
         
@@ -162,6 +190,26 @@ function publishDataToGoogleSlideFile_processSlide(slide, valueMap) {
                   element.asShape().setRotation(0);
                 } 
             }
+        } else if (match && match.length===3 && match[1]==='Graph') {
+	    Logger.log("Processing graph: " + alt + " " + element.getPageElementType())
+            var sourceId = match[2]
+	    if (valueMap[sourceId] && element.getPageElementType() == "IMAGE") {
+		Logger.log("Source id: " + valueMap[sourceId])
+		// Slightly unpleasant code to convert a graph to an image via a temporary slide document.
+		// This is beacuse the getAs method on the Gooogle Sheet graph object is broken, and returns axis with incorrect
+		// labels.
+		//
+		// TODO: This could definitely be optimised by only creating a temporary document once rather than each time
+		// a graph publish is needed.
+		foundSourceGraph = searchGraphByName(valueMap[sourceId])
+		if (foundSourceGraph) {
+                    const tmpSlidesDoc = SlidesApp.create("temp_slide_for_image");
+                    const imageBlob = tmpSlidesDoc.getSlides()[0].insertSheetsChartAsImage(foundSourceGraph).getAs("image/png");
+                    DriveApp.getFileById(tmpSlidesDoc.getId()).setTrashed(true);
+                    element.asImage().replace(imageBlob)
+		    element.setDescription(alt)
+		}
+	    }
         }
     }
 }
