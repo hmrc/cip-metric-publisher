@@ -181,14 +181,19 @@ function publishDataToGoogleSlideFile_processSlide(slide, valueMap) {
         } else if (match && match.length===3 && match[1]==='RotateImage') {
 	    Logger.log("Processing rotate image: " + alt)
             var sourceId = match[2]
-	    if (valueMap[sourceId]) {
-                if (valueMap[match[2]].replace("%","") < 0) {
-                  Logger.log("Rotating 180 degrees");
-                  element.asShape().setRotation(180);
-                } else if (valueMap[match[2]].replace("%","") >= 0) {
-                   Logger.log("Rotating 0 degrees");
-                  element.asShape().setRotation(0);
-                } 
+            if (valueMap[sourceId]) {
+                var rawPercentageChange = valueMap[sourceId].replace("%","");
+
+                if (rawPercentageChange < 0) {
+                    Logger.log("Rotating 180 degrees");
+                    element.asShape().setRotation(180);
+                } else if (rawPercentageChange > 0) {
+                    Logger.log("Rotating 0 degrees");
+                    element.asShape().setRotation(0);
+                }  else if (rawPercentageChange == 0) {
+                    Logger.log("Rotating 270 degrees");
+                    element.asShape().setRotation(270);
+                }
             }
         } else if (match && match.length===3 && match[1]==='Graph') {
 	    Logger.log("Processing graph: " + alt + " " + element.getPageElementType())
