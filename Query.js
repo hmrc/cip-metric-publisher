@@ -31,7 +31,7 @@ function cipMetrics_queryMetricsForColumn() {
   
   var endDate = new Date(startDate. getFullYear(), startDate.getMonth()+1, 0)
 
-  for (var i = 0; i < 2; i++) { //metricTypeColumn.length; i++) {
+  for (var i = 0; i < metricTypeColumn.length; i++) {
     switch (metricTypeColumn[i][0]) {
       case "PG Incidents":
         var incidentCount = getPagerDutyIncidentsByServiceAndTime(
