@@ -13,19 +13,25 @@ Logger.log("Last file URL = " + fileUrl)
     if (fileUrl) {
         Logger.log('Last slides file url: ' +fileUrl)
         SpreadsheetApp.getUi()
-          .createMenu('CIP Publish')
+          .createMenu('CIP Metrics')
           .addItem('Publish Data to a Slides Pack', 'publishDataHandler')
           .addItem('Publish to ' + PropertiesService.getUserProperties().getProperty('cip-last-slides-name'), 'publishLastFileHandler')
+          .addSeparator()
+          .addItem('Query Metrics for Month', 'cipMetrics_queryMetricsForColumn')
+          .addSeparator()
+          .addItem('Configure Metric Properties', 'cipMetrics_setupProperties')
           .addToUi();
     } else {
         SpreadsheetApp.getUi()
           .createMenu('CIP Publish')
           .addItem('Publish Data to a Slides Pack', 'publishDataHandler')
+          .addSeparator()
+          .addItem('Query Metrics for Month', 'cipMetrics_queryMetricsForColumn')
+          .addSeparator()
+          .addItem('Configure Metric Properties', 'cipMetrics_setupProperties')
           .addToUi();
     }
 }
-
-
 
 function publishDataHandler() {
 
