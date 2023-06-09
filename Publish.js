@@ -23,7 +23,7 @@ Logger.log("Last file URL = " + fileUrl)
           .addToUi();
     } else {
         SpreadsheetApp.getUi()
-          .createMenu('CIP Publish')
+          .createMenu('CIP Metrics')
           .addItem('Publish Data to a Slides Pack', 'publishDataHandler')
           .addSeparator()
           .addItem('Query Metrics for Month', 'cipMetrics_queryMetricsForColumn')
