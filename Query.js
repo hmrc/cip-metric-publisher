@@ -1,6 +1,17 @@
 var METRIC_ID_CELL_TEXT = "Metric ID"
 var ACCOUNTSSERVICES_CELL_TEXT = "Accounts/Services"
 var METRIC_TYPE_CELL_TEXT = "Metric Type"
+var QUERY_METRIC_CELL_TEXT = "Query Metric"
+var FILTER_CELL_TEXT = "Filter"
+
+function getColumnDataByName(sheet, columnName) {
+  var location = sheet.createTextFinder(columnName).matchEntireCell(true).findNext();
+  if (!location)  {
+      throw "Couldn't find " + columnName + " marker, did you delete a cell called '" + columnName + "'?"
+  }
+  var columnData   = sheet.getRange(location.getRow()+1,location.getColumn(),sheet.getLastRow()-location.getRow()).getDisplayValues()
+  return columnData
+}
 
 function cipMetrics_queryMetricsForColumn() {
   sheet = SpreadsheetApp.getActiveSheet()
@@ -11,34 +22,36 @@ function cipMetrics_queryMetricsForColumn() {
       throw "Couldn't find a valid report publish date to use"
   }
 
-  var metricTypeLocation = sheet.createTextFinder(METRIC_TYPE_CELL_TEXT).matchEntireCell(true).findNext();
-  if (!metricTypeLocation)  {
-      throw "Couldn't find " + METRIC_TYPE_CELL_TEXT + " marker, did you delete a cell called '" + METRIC_TYPE_CELL_TEXT + "'?"
-  }
-  var metricTypeColumn  = sheet.getRange(metricTypeLocation.getRow()+1,metricTypeLocation.getColumn(),sheet.getLastRow()-metricTypeLocation.getRow()).getDisplayValues()
+  var metricTypeColumn  = getColumnDataByName(sheet, METRIC_TYPE_CELL_TEXT)
+  var keysColumn        = getColumnDataByName(sheet, METRIC_ID_CELL_TEXT)
+  var queryMetricColumn = getColumnDataByName(sheet, QUERY_METRIC_CELL_TEXT)
+  var servicesColumn    = getColumnDataByName(sheet, ACCOUNTSSERVICES_CELL_TEXT)
+  var filterColumn      = getColumnDataByName(sheet, FILTER_CELL_TEXT)
 
-  var metricIdLocation = sheet.createTextFinder(METRIC_ID_CELL_TEXT).matchEntireCell(true).findNext();
-  if (!metricIdLocation)  {
-      throw "Couldn't find " + METRIC_ID_CELL_TEXT + " marker, did you delete a cell called '" + METRIC_ID_CELL_TEXT + "'?"
-  }
-  var keysColumn   = sheet.getRange(metricIdLocation.getRow()+1,metricIdLocation.getColumn(),sheet.getLastRow()-metricIdLocation.getRow()).getDisplayValues()
-
-  var servicesLocation = sheet.createTextFinder(ACCOUNTSSERVICES_CELL_TEXT).matchEntireCell(true).findNext();
-  if (!servicesLocation)  {
-      throw "Couldn't find " + ACCOUNTSSERVICES_CELL_TEXT + " marker, did you delete a cell called '" + ACCOUNTSSERVICES_CELL_TEXT + "'?"
-  }
-  var servicesColumn   = sheet.getRange(servicesLocation.getRow()+1,servicesLocation.getColumn(),sheet.getLastRow()-servicesLocation.getRow()).getDisplayValues()
-  
   var endDate = new Date(startDate. getFullYear(), startDate.getMonth()+1, 0)
 
   for (var i = 0; i < metricTypeColumn.length; i++) {
     switch (metricTypeColumn[i][0]) {
-      case "PG Incidents":
-        var incidentCount = getPagerDutyIncidentsByServiceAndTime(
-                              cipMetrics_getPagerdutyAPIToken(),
-                              startDate, endDate,
-                              servicesColumn[i]).length
-        sheet.getRange(i+2,sheet.getActiveCell().getColumn(),1).setValue(incidentCount)
+      case "PagerDuty":
+        switch (queryMetricColumn[i][0]) {
+          case "Incident Count":
+            var incidentCount = getPagerDutyTotalIncidentsByServiceAndTime(
+                                  cipMetrics_getPagerdutyAPIToken(),
+                                  startDate, endDate,
+                                  servicesColumn[i],
+                                  filterColumn[i])
+            sheet.getRange(i+2,sheet.getActiveCell().getColumn(),1).setValue(incidentCount)
+            break;
+          case "Incident Duration":
+            var incidentDuration = getPagerDutyIncidentsDurationByServiceAndTime(
+                                  cipMetrics_getPagerdutyAPIToken(),
+                                  startDate, endDate,
+                                  servicesColumn[i],
+                                  filterColumn[i])
+            sheet.getRange(i+2,sheet.getActiveCell().getColumn(),1).setValue(incidentDuration)
+            break;
+        }
+        break;
     }
   }
 }

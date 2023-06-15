@@ -1,17 +1,11 @@
 var REPORT_MONTH_TEXT = "Report Month"
 var METRIC_ID_CELL_TEXT = "Metric ID"
+var METRIC_NAME_CELL_TEXT = "Metric Name"
 var RESULTS_CELL_TEXT = "Results"
-
-/* function onOpen() {
-   configurePublishMenu()
-}
-*/
 
 function configurePublishMenu() {
     fileUrl = PropertiesService.getUserProperties().getProperty('cip-last-slides-url')
-Logger.log("Last file URL = " + fileUrl)
     if (fileUrl) {
-        Logger.log('Last slides file url: ' +fileUrl)
         SpreadsheetApp.getUi()
           .createMenu('CIP Metrics')
           .addItem('Publish Data to a Slides Pack', 'publishDataHandler')
@@ -23,7 +17,7 @@ Logger.log("Last file URL = " + fileUrl)
           .addToUi();
     } else {
         SpreadsheetApp.getUi()
-          .createMenu('CIP Publish')
+          .createMenu('CIP Metrics')
           .addItem('Publish Data to a Slides Pack', 'publishDataHandler')
           .addSeparator()
           .addItem('Query Metrics for Month', 'cipMetrics_queryMetricsForColumn')
@@ -47,7 +41,7 @@ function publishDataHandler() {
   fileUrl = slideUrlHandler.getResponseText();
 
   if (fileUrl) {
-    publishDataToGoogleSlideFile(fileUrl, configuration["valueMap"]);
+    publishDataToGoogleSlideFile(fileUrl, configuration);
 
     var docName = SlidesApp.openByUrl(fileUrl).getName()
     PropertiesService.getUserProperties().setProperties({
@@ -63,7 +57,7 @@ function publishDataHandler() {
 function publishLastFileHandler() {
     configuration = deriveMetricsConfiguration()
     fileUrl = PropertiesService.getUserProperties().getProperty('cip-last-slides-url')
-    publishDataToGoogleSlideFile(fileUrl, configuration["valueMap"]);
+    publishDataToGoogleSlideFile(fileUrl, configuration);
 }
 
 //
@@ -91,11 +85,28 @@ function deriveMetricsConfiguration() {
   if (!metricIdLocation)  {
       throw "Couldn't find " + METRIC_ID_CELL_TEXT + " marker, did you delete a cell called '" + METRIC_ID_CELL_TEXT + "'?"
   }
+  var metricNameLocation = sheet.createTextFinder(METRIC_NAME_CELL_TEXT).matchEntireCell(true).findNext();
+  if (!metricNameLocation)  {
+      throw "Couldn't find " + METRIC_NAME_CELL_TEXT + " marker, did you delete a cell called '" + METRIC_NAME_CELL_TEXT + "'?"
+  }
   var keysColumn   = sheet.getRange(metricIdLocation.getRow()+1,metricIdLocation.getColumn(),sheet.getLastRow()-metricIdLocation.getRow()).getDisplayValues()
 
   switch (metricParseType) {
     case "monthBasedList":
         var valuesColumn   = sheet.getRange(metricIdLocation.getRow()+1,sheet.getActiveCell().getColumn(),keysColumn.length).getDisplayValues()
+        var namesColumn    = sheet.getRange(metricNameLocation.getRow()+1,
+                                            metricNameLocation.getColumn(),
+                                            keysColumn.length,
+                                            1).getValues()
+        var historyData = sheet.getRange(metricIdLocation.getRow()+1,
+                                           1,
+                                           keysColumn.length,
+                                           sheet.getActiveCell().getColumn()).getValues()
+        var titles = sheet.getRange(metricIdLocation.getRow(),
+                                    1,
+                                    1,
+                                    sheet.getActiveCell().getColumn()).getDisplayValues()[0]
+//        Logger.log(historyData[0])
         break;
     case "googleAnalyticsConfig":
         var resultsLocation = sheet.getRange(metricIdLocation.getRow(),metricIdLocation.getColumn(),1,sheet.getLastRow()).createTextFinder(RESULTS_CELL_TEXT).matchEntireCell(true).findNext();
@@ -109,54 +120,35 @@ function deriveMetricsConfiguration() {
         throw "Unknown parsing type " + metricParseType
   }
 
-  valueMap = {}
+  valueMap   = {}
+  nameMap   = {}
+  historyMap = {}
   for (var i = 0; i < keysColumn.length; i++) {
       if (keysColumn[i][0] && keysColumn[i][0] != "") {
-//          Logger.log(keysColumn[i][0] + ' -> ' + valuesColumn[i][0])
-          valueMap[keysColumn[i][0]] = valuesColumn[i][0]
+//        Logger.log(keysColumn[i][0] + ' -> ' + valuesColumn[i][0])
+        valueMap[keysColumn[i][0]] = valuesColumn[i][0]
+        nameMap[keysColumn[i][0]] = namesColumn[i][0]
+        if (historyData) {
+          historyMap[keysColumn[i][0]] = historyData[i]
+        }
       }
   }
   
   var resultMap = {}
   resultMap["month"] = metricDate.getFullYear() + '-' + (metricDate.getMonth()+1)
   resultMap["valueMap"] = valueMap
-  Logger.log(resultMap)
+  resultMap["nameMap"] = nameMap
+  resultMap["historyMap"] = historyMap
+  if (titles) resultMap["titles"] = titles
   return resultMap
 }
 
-//
-// Searches the current sheet for a graph of a particular name
-//
-function searchGraphByName (searchName) {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getActiveSheet();
-
-    var charts = sheet.getCharts()
-    var apiCharts = Sheets.Spreadsheets.get(ss.getId(), { ranges: [sheet.getSheetName()], fields: "sheets(charts)" }).sheets[0].charts;
-
-    for (var i = 0; i < apiCharts.length; i++) {
-        chart = apiCharts[i]
-        var { altText } = chart.spec;
-        if (altText) {
-            // Check whether the alt text graph name matches the search name
-            var regExp = new RegExp('.*(Graph): ([^\\s]+)', "i"); 
-            var match = regExp.exec(altText);
-            if (match) {
-                graphAltName = match[2]
-                if (graphAltName === searchName) {
-                    return (charts[i])
-                }
-            }
-        }
-    }
-    // Not found
-    return null
-}
 
 // Loop through each page element, and if it has a source marker, and we have value for it,
 // set the value of the element.
-function publishDataToGoogleSlideFile_processSlide(slide, valueMap) {
+function publishDataToGoogleSlideFile_processSlide(slide, configuration, tmpSlidesDoc) {
 //    Logger.log(slide)
+    var valueMap = configuration["valueMap"]
     var elements = slide.getPageElements()
 
     // Loop through elements identifying if any have Source references in the alt text
@@ -164,10 +156,10 @@ function publishDataToGoogleSlideFile_processSlide(slide, valueMap) {
         var element = elements[i]
         var alt = element.getDescription()
 
-        var regExp = new RegExp('.*(Source|RotateImage|Graph): ([^\\s]+)', "i"); 
+        var regExp = new RegExp('.*(Source|RotateImage|Graph|Render): ([^\\s]+)', "i"); 
         
         var match = regExp.exec(alt);
-        
+        Logger.log("Deciding on " + alt + " -------------------- " + match)       
         if (match && match.length===3 && match[1]==='Source') {
             var sourceId = match[2]
             // If we've got a value for the Source, set the page elements value
@@ -202,34 +194,49 @@ function publishDataToGoogleSlideFile_processSlide(slide, valueMap) {
                 }
             }
         } else if (match && match.length===3 && match[1]==='Graph') {
-	    Logger.log("Processing graph: " + alt + " " + element.getPageElementType())
             var sourceId = match[2]
-	    if (valueMap[sourceId] && element.getPageElementType() == "IMAGE") {
-		Logger.log("Source id: " + valueMap[sourceId])
-		// Slightly unpleasant code to convert a graph to an image via a temporary slide document.
-		// This is beacuse the getAs method on the Gooogle Sheet graph object is broken, and returns axis with incorrect
-		// labels.
-		//
-		// TODO: This could definitely be optimised by only creating a temporary document once rather than each time
-		// a graph publish is needed.
-		foundSourceGraph = searchGraphByName(valueMap[sourceId])
-		if (foundSourceGraph) {
-                    const tmpSlidesDoc = SlidesApp.create("temp_slide_for_image");
-                    const imageBlob = tmpSlidesDoc.getSlides()[0].insertSheetsChartAsImage(foundSourceGraph).getAs("image/png");
-                    DriveApp.getFileById(tmpSlidesDoc.getId()).setTrashed(true);
-                    element.asImage().replace(imageBlob)
-		    element.setDescription(alt)
-		}
-	    }
+	          if (valueMap[sourceId] && element.getPageElementType() == "IMAGE") {
+		        // Slightly unpleasant code to convert a graph to an image via a temporary slide document.
+		        // This is beacuse the getAs method on the Gooogle Sheet graph object is broken, and returns axis with incorrect
+		        // labels.
+
+		        foundSourceGraph = searchGraphByName(valueMap[sourceId])
+		        if (foundSourceGraph) {
+              var imageBlob = tmpSlidesDoc.getSlides()[0].insertSheetsChartAsImage(foundSourceGraph).getAs("image/png");
+              element.asImage().replace(imageBlob)
+		          element.setDescription(alt)
+		        }
+	        }
+        } else if (match && match.length===3 && match[1]==='Render') {
+          var sourceIds = match[2].split(",")
+          Logger.log("Render " + sourceIds)
+	        if (element.getPageElementType() == "IMAGE") {
+            graphConfig = "{}"
+            var renderRegExp = new RegExp('.*(Render): ([^\\s]+) (.*)$', "i"); 
+            Logger.log("Matching against :" + alt)
+            var renderMatch = renderRegExp.exec(alt);
+            Logger.log("RenderMatch = " + renderMatch.length)
+            if (renderMatch.length === 4) {
+              graphConfig = renderMatch[3]
+            }
+            var imageBlob = createGraphBlob(configuration, sourceIds, graphConfig)
+            element.asImage().replace(imageBlob)
+		        element.setDescription(alt)
+          }
+
+        } else {
+          Logger.log("Couldn't match " + alt)
         }
-    }
+   } // elements loop
 }
 
 
-function publishDataToGoogleSlideFile(documentUrl, valueMap) {
+function publishDataToGoogleSlideFile(documentUrl, configuration) {
     var slideDoc = SlidesApp.openByUrl(documentUrl)
     var slides = slideDoc.getSlides()
+    var tmpSlidesDoc = SlidesApp.create("temp_slide_for_image")
     for (var i = 0; i < slides.length; i++) {
-        publishDataToGoogleSlideFile_processSlide(slides[i], valueMap)
+        publishDataToGoogleSlideFile_processSlide(slides[i], configuration, tmpSlidesDoc)
     }
+    DriveApp.getFileById(tmpSlidesDoc.getId()).setTrashed(true);
 }
