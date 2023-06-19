@@ -10,6 +10,7 @@ function configurePublishMenu() {
           .createMenu('CIP Metrics')
           .addItem('Publish Data to a Slides Pack', 'publishDataHandler')
           .addItem('Publish to ' + PropertiesService.getUserProperties().getProperty('cip-last-slides-name'), 'publishLastFileHandler')
+          .addItem('Mark Slide document properties yellow', 'cipMetrics_markSlideDocumentElementsYellow')
           .addSeparator()
           .addItem('Query Metrics for Month', 'cipMetrics_queryMetricsForColumn')
           .addSeparator()
@@ -19,6 +20,7 @@ function configurePublishMenu() {
         SpreadsheetApp.getUi()
           .createMenu('CIP Metrics')
           .addItem('Publish Data to a Slides Pack', 'publishDataHandler')
+          .addItem('Mark Slide document properties yellow', 'cipMetrics_markSlideDocumentElementsYellow')
           .addSeparator()
           .addItem('Query Metrics for Month', 'cipMetrics_queryMetricsForColumn')
           .addSeparator()
@@ -239,4 +241,37 @@ function publishDataToGoogleSlideFile(documentUrl, configuration) {
         publishDataToGoogleSlideFile_processSlide(slides[i], configuration, tmpSlidesDoc)
     }
     DriveApp.getFileById(tmpSlidesDoc.getId()).setTrashed(true);
+}
+
+
+function cipMetrics_markSlideDocumentElementsYellow() {
+
+  var ui = SpreadsheetApp.getUi();
+
+  var slideUrlHandler = ui.prompt(
+      'Target slides file',
+      'Please enter URL for the target slide document to mark yellow',
+      ui.ButtonSet.OK_CANCEL);
+  
+  documentUrl = slideUrlHandler.getResponseText();
+
+  if (documentUrl) {
+    var slideDoc = SlidesApp.openByUrl(documentUrl)
+    var slides = slideDoc.getSlides()
+    for (var i = 0; i < slides.length; i++) {
+      var elements = slides[i].getPageElements()
+      // Loop through elements identifying if any have Source references in the alt text
+      for (var e = 0; e < elements.length; e++) {
+        var element = elements[e]
+        var alt = element.getDescription()
+        if (alt != "") {
+          try {
+            var textStyle = element.asShape().getText().getTextStyle().setBackgroundColor("#f0fc27")
+          } catch (err) {
+            Logger.log(err)
+          }
+        }
+      }
+    }
+  }
 }
