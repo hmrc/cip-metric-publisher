@@ -12,11 +12,12 @@ Enter this Script ID and then click Look Up:
 
 1ko-K-TeOxLKeSceATrC1nExdwXnniOJfKyS2zWO31dDCIxXkK_Fehg-s
 
-Select the version of the library you want to use, leaving the Identifier as the default "CIPMetricPublisher". Click Add.
+Select the version of the library you want to use, leaving the Identifier as the default "CIPMetricPublisher". Do not use HEAD. Click Add.
 
 Add this code snippet to your code.gs file.
 
 ```
+
 function onOpen() {
    CIPMetricPublisher.configurePublishMenu()
 }
@@ -27,6 +28,18 @@ function publishDataHandler (){
 
 function publishLastFileHandler (){
   CIPMetricPublisher.publishLastFileHandler()
+}
+
+function cipMetrics_setupProperties (){
+  CIPMetricPublisher.cipMetrics_setupProperties()
+}
+
+function cipMetrics_queryMetricsForColumn () {
+  CIPMetricPublisher.cipMetrics_queryMetricsForColumn()
+}
+
+function cipMetrics_markSlideDocumentElementsYellow() {
+  CIPMetricPublisher.cipMetrics_markSlideDocumentElementsYellow()
 }
 ```
 
