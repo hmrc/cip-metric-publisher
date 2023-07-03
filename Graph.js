@@ -97,11 +97,10 @@ function createGraphBlob (configuration, sourceIds, chartConfigString) {
       .setOption('series', SERIES_COLORS)
 
   if (chartConfig.options) {
-    for(var i in chartConfig.options){
-      for(var optionKey in chartConfig.options[i]) {
-//        Logger.log(optionKey + " = " + JSON.stringify(chartConfig.options[i][optionKey]))
-        chart = chart.setOption(optionKey, chartConfig.options[i][optionKey])
-      }
+    for(var optionKey in chartConfig.options){
+      Logger.log("Option " + optionKey) 
+      Logger.log("Value " + JSON.stringify(chartConfig.options[optionKey]))
+      chart = chart.setOption(optionKey, chartConfig.options[optionKey])
     }
   }
 
