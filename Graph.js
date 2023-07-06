@@ -76,6 +76,11 @@ function createGraphBlob (configuration, sourceIds, chartConfigString) {
   }
   data = data.build();
 
+  // var view = Charts.newDataViewDefinition().setColumns([0,1,{ calc: "stringify",
+  //                        sourceColumn: 1,
+  //                        type: "string",
+  //                        role: "annotation" }]);
+
   switch (graphType) {
     case "Line":
       var chart = Charts.newLineChart()
@@ -95,6 +100,7 @@ function createGraphBlob (configuration, sourceIds, chartConfigString) {
   chart = chart.setDataTable(data)
       .setDimensions(1048, 768)
       .setOption('series', SERIES_COLORS)
+//.setDataViewDefinition(view)
 
   if (chartConfig.options) {
     for(var optionKey in chartConfig.options){
