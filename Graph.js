@@ -1,6 +1,9 @@
-var SERIES_COLORS = {0: {color: "00008B"},
-                     1: {color: "008d8d"},
-                     2: {color: "fbbc04"}}
+var SERIES_COLORS = {0: {color: "003078"},
+                     1: {color: "28A197"},
+                     2: {color: "00703c"},
+                     3: {color: "1d70b8"},
+                     4: {color: "ffdd00"}
+                     }
 var DEFAULT_CHART_NUM_MONTHS = 3
 var DEFAULT_GRAPH_TYPE = "Line"     
 
@@ -50,16 +53,27 @@ function createGraphBlob (configuration, sourceIds, chartConfigString) {
   if (chartConfig.graphType) {graphType = chartConfig.graphType}
   var isStacked = false
   if (chartConfig.isStacked) {var isStacked = chartConfig.isStacked}
+  var dataLabelAnnotation = false
+  if (chartConfig.dataLabelAnnotation) {dataLabelAnnotation = chartConfig.dataLabelAnnotation}
 
   // Construct the graph structure, consisting of month along the X axis, and a series per data source
   var data = Charts.newDataTable().addColumn(Charts.ColumnType.STRING, 'Month')
+  viewCols = [0]
   for (i = 0; i < sourceIds.length; i++) {
     data = data.addColumn(Charts.ColumnType.NUMBER, configuration["nameMap"][sourceIds[i]])
+    viewCols.push(i+1)
+    if (dataLabelAnnotation) {
+      viewCols.push({
+            calc: "stringify",
+            sourceColumn: i+1,
+            type: "string",
+            role: "annotation"
+      });
+    }
   }
 
   // Retrieve the title row from the datasheet tab
   titlesRow = configuration["titles"]
-
   // Loop over the months of data, constructing the data series
   for (mc = titlesRow.length-numMonths; mc < titlesRow.length; mc++) {
     monthTitle = titlesRow[mc]
@@ -72,6 +86,7 @@ function createGraphBlob (configuration, sourceIds, chartConfigString) {
       monthGraphData.push(Number(sourceIdData))
     }
     // Add the months datapoints to the graph
+Logger.log("Row " + monthGraphData)
     data = data.addRow(monthGraphData)
   }
   data = data.build();
@@ -96,12 +111,17 @@ function createGraphBlob (configuration, sourceIds, chartConfigString) {
       .setDimensions(1048, 768)
       .setOption('series', SERIES_COLORS)
 
+  // Add configuration to display data labels if specified
+  if (dataLabelAnnotation) {
+    var view = Charts.newDataViewDefinition().setColumns(viewCols)
+    chart = chart.setDataViewDefinition(view)
+  }
+
   if (chartConfig.options) {
-    for(var i in chartConfig.options){
-      for(var optionKey in chartConfig.options[i]) {
-//        Logger.log(optionKey + " = " + JSON.stringify(chartConfig.options[i][optionKey]))
-        chart = chart.setOption(optionKey, chartConfig.options[i][optionKey])
-      }
+    for(var optionKey in chartConfig.options){
+      // Logger.log("Option " + optionKey) 
+      // Logger.log("Value " + JSON.stringify(chartConfig.options[optionKey]))
+      chart = chart.setOption(optionKey, chartConfig.options[optionKey])
     }
   }
 
