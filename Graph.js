@@ -1,7 +1,9 @@
-var SERIES_COLORS = {0: {color: "00008B"},
-                     1: {color: "008d8d"},
-                     2: {color: "fbbc04"},
-                     3: {color: "00713c"}}
+var SERIES_COLORS = {0: {color: "003078"},
+                     1: {color: "28A197"},
+                     2: {color: "00703c"},
+                     3: {color: "1d70b8"},
+                     4: {color: "ffdd00"}
+                     }
 var DEFAULT_CHART_NUM_MONTHS = 3
 var DEFAULT_GRAPH_TYPE = "Line"     
 
@@ -84,7 +86,7 @@ function createGraphBlob (configuration, sourceIds, chartConfigString) {
       monthGraphData.push(Number(sourceIdData))
     }
     // Add the months datapoints to the graph
-//Logger.log("Row " + monthGraphData)
+Logger.log("Row " + monthGraphData)
     data = data.addRow(monthGraphData)
   }
   data = data.build();
