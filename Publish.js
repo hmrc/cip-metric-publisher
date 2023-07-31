@@ -39,7 +39,7 @@ function publishDataHandler() {
       'Target slides file',
       'Publishing data for ' + configuration["month"] + '. Please enter URL for the target slide document to update data',
       ui.ButtonSet.OK_CANCEL);
-  
+
   fileUrl = slideUrlHandler.getResponseText();
 
   if (fileUrl) {
@@ -67,16 +67,16 @@ function publishLastFileHandler() {
 //
 function deriveMetricsConfiguration() {
   sheet = SpreadsheetApp.getActiveSheet()
-  var metricDate, metricParseType;
+  var metricDate, metricParseType, valuesColumn;
 
   var reportMonthCellLocation = sheet.createTextFinder(REPORT_MONTH_TEXT).matchEntireCell(true).findNext();
-  
+
   if(!reportMonthCellLocation) { // if no 'Report Month' found, look at first row and get the active column and use the date from that
       metricDate = new Date(sheet.getRange(1,sheet.getActiveCell().getColumn(),1).getValues()[0][0]);
       metricParseType = 'monthBasedList'
   } else { //grab the date from the cell adjacent to 'Report Month'
       metricDate = new Date(sheet.getRange(reportMonthCellLocation.getRow(),reportMonthCellLocation.getColumn()+1).getValues()[0][0]);
-      metricParseType = 'googleAnalyticsConfig'
+      metricParseType = 'dateField'
   }
 
   if (isNaN(metricDate.getFullYear())) {
@@ -88,14 +88,14 @@ function deriveMetricsConfiguration() {
       throw "Couldn't find " + METRIC_ID_CELL_TEXT + " marker, did you delete a cell called '" + METRIC_ID_CELL_TEXT + "'?"
   }
   var metricNameLocation = sheet.createTextFinder(METRIC_NAME_CELL_TEXT).matchEntireCell(true).findNext();
-  if (!metricNameLocation)  {
+  if (metricParseType==='monthBasedList' && !metricNameLocation)  {
       throw "Couldn't find " + METRIC_NAME_CELL_TEXT + " marker, did you delete a cell called '" + METRIC_NAME_CELL_TEXT + "'?"
   }
   var keysColumn   = sheet.getRange(metricIdLocation.getRow()+1,metricIdLocation.getColumn(),sheet.getLastRow()-metricIdLocation.getRow()).getDisplayValues()
 
   switch (metricParseType) {
     case "monthBasedList":
-        var valuesColumn   = sheet.getRange(metricIdLocation.getRow()+1,sheet.getActiveCell().getColumn(),keysColumn.length).getDisplayValues()
+        valuesColumn   = sheet.getRange(metricIdLocation.getRow()+1,sheet.getActiveCell().getColumn(),keysColumn.length).getDisplayValues()
         var namesColumn    = sheet.getRange(metricNameLocation.getRow()+1,
                                             metricNameLocation.getColumn(),
                                             keysColumn.length,
@@ -110,12 +110,12 @@ function deriveMetricsConfiguration() {
                                     sheet.getActiveCell().getColumn()).getDisplayValues()[0]
 //        Logger.log(historyData[0])
         break;
-    case "googleAnalyticsConfig":
+    case "dateField":
         var resultsLocation = sheet.getRange(metricIdLocation.getRow(),metricIdLocation.getColumn(),1,sheet.getLastRow()).createTextFinder(RESULTS_CELL_TEXT).matchEntireCell(true).findNext();
         if (!resultsLocation)  {
             throw "Couldn't find " + RESULTS_CELL_TEXT + " marker, did you delete a cell called '" + RESULTS_CELL_TEXT + "'?"
         }
-        var valuesColumn   = sheet.getRange(resultsLocation.getRow()+1,resultsLocation.getColumn(),keysColumn.length).getDisplayValues()
+        valuesColumn   = sheet.getRange(resultsLocation.getRow()+1,resultsLocation.getColumn(),keysColumn.length).getDisplayValues()
 
         break;
     default:
@@ -129,13 +129,15 @@ function deriveMetricsConfiguration() {
       if (keysColumn[i][0] && keysColumn[i][0] != "") {
 //        Logger.log(keysColumn[i][0] + ' -> ' + valuesColumn[i][0])
         valueMap[keysColumn[i][0]] = valuesColumn[i][0]
-        nameMap[keysColumn[i][0]] = namesColumn[i][0]
+        if (metricParseType==='monthBasedList') {
+            nameMap[keysColumn[i][0]] = namesColumn[i][0]
+        }
         if (historyData) {
           historyMap[keysColumn[i][0]] = historyData[i]
         }
       }
   }
-  
+
   var resultMap = {}
   resultMap["month"] = metricDate.getFullYear() + '-' + (metricDate.getMonth()+1)
   resultMap["valueMap"] = valueMap
@@ -158,15 +160,15 @@ function publishDataToGoogleSlideFile_processSlide(slide, configuration, tmpSlid
         var element = elements[i]
         var alt = element.getDescription()
 
-        var regExp = new RegExp('.*(Source|RotateImage|Graph|Render): ([^\\s]+)', "i"); 
-        
+        var regExp = new RegExp('.*(Source|RotateImage|Graph|Render): ([^\\s]+)', "i");
+
         var match = regExp.exec(alt);
-        Logger.log("Deciding on " + alt + " -------------------- " + match)       
+        Logger.log("Deciding on " + alt + " -------------------- " + match)
         if (match && match.length===3 && match[1]==='Source') {
             var sourceId = match[2]
             // If we've got a value for the Source, set the page elements value
             if (valueMap[sourceId]) {
-                var regExp2 = new RegExp('.*-percentage-change', "i"); 
+                var regExp2 = new RegExp('.*-percentage-change', "i");
                 var matchPercentageChange = regExp2.exec(sourceId);
                 var finalVal = valueMap[sourceId];
                 Logger.log("Processing value " + finalVal)
@@ -214,7 +216,7 @@ function publishDataToGoogleSlideFile_processSlide(slide, configuration, tmpSlid
           Logger.log("Render " + sourceIds)
 	        if (element.getPageElementType() == "IMAGE") {
             graphConfig = "{}"
-            var renderRegExp = new RegExp('.*(Render): ([^\\s]+) (.*)$', "i"); 
+            var renderRegExp = new RegExp('.*(Render): ([^\\s]+) (.*)$', "i");
             Logger.log("Matching against :" + alt)
             var renderMatch = renderRegExp.exec(alt);
             Logger.log("RenderMatch = " + renderMatch.length)
@@ -252,7 +254,7 @@ function cipMetrics_markSlideDocumentElementsYellow() {
       'Target slides file',
       'Please enter URL for the target slide document to mark yellow',
       ui.ButtonSet.OK_CANCEL);
-  
+
   documentUrl = slideUrlHandler.getResponseText();
 
   if (documentUrl) {
