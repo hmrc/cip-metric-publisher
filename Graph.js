@@ -103,6 +103,10 @@ Logger.log("Row " + monthGraphData)
       var chart = Charts.newColumnChart()
       if (isStacked) {chart = chart.setStacked()}
       break;
+    case "Area":
+      var chart = Charts.newAreaChart()
+      if (isStacked) {chart = chart.setStacked()}
+      break;
     default:
       var chart = Charts.newLineChart()
       break;

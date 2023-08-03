@@ -139,6 +139,7 @@ function deriveMetricsConfiguration() {
   }
 
   var resultMap = {}
+  resultMap["parseType"] = metricParseType
   resultMap["month"] = metricDate.getFullYear() + '-' + (metricDate.getMonth()+1)
   resultMap["valueMap"] = valueMap
   resultMap["nameMap"] = nameMap
@@ -153,6 +154,7 @@ function deriveMetricsConfiguration() {
 function publishDataToGoogleSlideFile_processSlide(slide, configuration, tmpSlidesDoc) {
 //    Logger.log(slide)
     var valueMap = configuration["valueMap"]
+    var parseType = configuration["parseType"]
     var elements = slide.getPageElements()
 
     // Loop through elements identifying if any have Source references in the alt text
@@ -197,7 +199,7 @@ function publishDataToGoogleSlideFile_processSlide(slide, configuration, tmpSlid
                     element.asShape().setRotation(270);
                 }
             }
-        } else if (match && match.length===3 && match[1]==='Graph') {
+        } else if (match && match.length===3 && match[1]==='Graph' && parseType==='monthBasedList') {
             var sourceId = match[2]
 	          if (valueMap[sourceId] && element.getPageElementType() == "IMAGE") {
 		        // Slightly unpleasant code to convert a graph to an image via a temporary slide document.
@@ -211,7 +213,7 @@ function publishDataToGoogleSlideFile_processSlide(slide, configuration, tmpSlid
 		          element.setDescription(alt)
 		        }
 	        }
-        } else if (match && match.length===3 && match[1]==='Render') {
+        } else if (match && match.length===3 && match[1]==='Render' && parseType==='monthBasedList') {
           var sourceIds = match[2].split(",")
           Logger.log("Render " + sourceIds)
 	        if (element.getPageElementType() == "IMAGE") {
