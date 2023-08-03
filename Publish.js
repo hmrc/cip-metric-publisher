@@ -199,7 +199,7 @@ function publishDataToGoogleSlideFile_processSlide(slide, configuration, tmpSlid
                     element.asShape().setRotation(270);
                 }
             }
-        } else if (match && match.length===3 && match[1]==='Graph' && parseType==='monthBasedList') {
+        } else if (match && match.length===3 && match[1]==='Graph') {
             var sourceId = match[2]
 	          if (valueMap[sourceId] && element.getPageElementType() == "IMAGE") {
 		        // Slightly unpleasant code to convert a graph to an image via a temporary slide document.
