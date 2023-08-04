@@ -151,89 +151,104 @@ function deriveMetricsConfiguration() {
 
 // Loop through each page element, and if it has a source marker, and we have value for it,
 // set the value of the element.
-function publishDataToGoogleSlideFile_processSlide(slide, configuration, tmpSlidesDoc) {
+function publishDataToGoogleSlideFile_processSlide(slideNumber, slide, configuration, tmpSlidesDoc) {
 //    Logger.log(slide)
     var valueMap = configuration["valueMap"]
     var parseType = configuration["parseType"]
     var elements = slide.getPageElements()
 
-    // Loop through elements identifying if any have Source references in the alt text
     for (var i = 0; i < elements.length; i++) {
         var element = elements[i]
         var alt = element.getDescription()
+        try { 
+        // Loop through elements identifying if any have Source references in the alt text
+            var regExp = new RegExp('.*(Source|RotateImage|Graph|Render): ([^\\s]+)', "i");
 
-        var regExp = new RegExp('.*(Source|RotateImage|Graph|Render): ([^\\s]+)', "i");
-
-        var match = regExp.exec(alt);
-        Logger.log("Deciding on " + alt + " -------------------- " + match)
-        if (match && match.length===3 && match[1]==='Source') {
-            var sourceId = match[2]
-            // If we've got a value for the Source, set the page elements value
-            if (valueMap[sourceId]) {
-                var regExp2 = new RegExp('.*-percentage-change', "i");
-                var matchPercentageChange = regExp2.exec(sourceId);
-                var finalVal = valueMap[sourceId];
-                Logger.log("Processing value " + finalVal)
-                if (matchPercentageChange) {
-                    Logger.log("Found a percentage change to construct");
-                    finalVal = '('+(finalVal.replace("%",""))+'%)'
+            var match = regExp.exec(alt);
+            Logger.log("Deciding on " + alt + " -------------------- " + match)
+            if (match && match.length===3 && match[1]==='Source') {
+                var sourceId = match[2]
+                // If we've got a value for the Source, set the page elements value
+                if (valueMap[sourceId]) {
+                    var regExp2 = new RegExp('.*-percentage-change', "i");
+                    var matchPercentageChange = regExp2.exec(sourceId);
+                    var finalVal = valueMap[sourceId];
+                    Logger.log("Processing value " + finalVal)
+                    if (matchPercentageChange) {
+                        Logger.log("Found a percentage change to construct");
+                        finalVal = '('+(finalVal.replace("%",""))+'%)'
+                    }
+                    Logger.log("Setting " + sourceId + " to " + finalVal)
+                    element.asShape().getText().setText(finalVal)
+                    element.asShape().getText().getTextStyle().setBackgroundColorTransparent()
                 }
-                Logger.log("Setting " + sourceId + " to " + finalVal)
-                element.asShape().getText().setText(finalVal)
-                element.asShape().getText().getTextStyle().setBackgroundColorTransparent()
-            }
-        } else if (match && match.length===3 && match[1]==='RotateImage') {
-	    Logger.log("Processing rotate image: " + alt)
-            var sourceId = match[2]
-            if (valueMap[sourceId]) {
-                var rawPercentageChange = valueMap[sourceId].replace("%","");
+            } else if (match && match.length===3 && match[1]==='RotateImage') {
+	        Logger.log("Processing rotate image: " + alt)
+                var sourceId = match[2]
+                if (valueMap[sourceId]) {
+                    var rawPercentageChange = valueMap[sourceId].replace("%","");
 
-                if (rawPercentageChange < 0) {
-                    Logger.log("Rotating 180 degrees");
-                    element.asShape().setRotation(180);
-                } else if (rawPercentageChange > 0) {
-                    Logger.log("Rotating 0 degrees");
-                    element.asShape().setRotation(0);
-                }  else if (rawPercentageChange == 0) {
-                    Logger.log("Rotating 270 degrees");
-                    element.asShape().setRotation(270);
+                    if (rawPercentageChange < 0) {
+                        Logger.log("Rotating 180 degrees");
+                        element.asShape().setRotation(180);
+                    } else if (rawPercentageChange > 0) {
+                        Logger.log("Rotating 0 degrees");
+                        element.asShape().setRotation(0);
+                    }  else if (rawPercentageChange == 0) {
+                        Logger.log("Rotating 270 degrees");
+                        element.asShape().setRotation(270);
+                    }
                 }
-            }
-        } else if (match && match.length===3 && match[1]==='Graph') {
-            var sourceId = match[2]
-	          if (valueMap[sourceId] && element.getPageElementType() == "IMAGE") {
-		        // Slightly unpleasant code to convert a graph to an image via a temporary slide document.
-		        // This is beacuse the getAs method on the Gooogle Sheet graph object is broken, and returns axis with incorrect
-		        // labels.
+            } else if (match && match.length===3 && match[1]==='Graph') {
+                var sourceId = match[2]
+	              if (valueMap[sourceId] && element.getPageElementType() == "IMAGE") {
+		                // Slightly unpleasant code to convert a graph to an image via a temporary slide document.
+		                // This is beacuse the getAs method on the Gooogle Sheet graph object is broken, and returns axis with incorrect
+		                // labels.
 
-		        foundSourceGraph = searchGraphByName(valueMap[sourceId])
-		        if (foundSourceGraph) {
-              var imageBlob = tmpSlidesDoc.getSlides()[0].insertSheetsChartAsImage(foundSourceGraph).getAs("image/png");
-              element.asImage().replace(imageBlob)
-		          element.setDescription(alt)
-		        }
-	        }
-        } else if (match && match.length===3 && match[1]==='Render' && parseType==='monthBasedList') {
-          var sourceIds = match[2].split(",")
-          Logger.log("Render " + sourceIds)
-	        if (element.getPageElementType() == "IMAGE") {
-            graphConfig = "{}"
-            var renderRegExp = new RegExp('.*(Render): ([^\\s]+) (.*)$', "i");
-            Logger.log("Matching against :" + alt)
-            var renderMatch = renderRegExp.exec(alt);
-            Logger.log("RenderMatch = " + renderMatch.length)
-            if (renderMatch.length === 4) {
-              graphConfig = renderMatch[3]
-            }
-            var imageBlob = createGraphBlob(configuration, sourceIds, graphConfig)
-            element.asImage().replace(imageBlob)
-		        element.setDescription(alt)
-          }
+		                foundSourceGraph = searchGraphByName(valueMap[sourceId])
+		                if (foundSourceGraph) {
+                        var imageBlob = tmpSlidesDoc.getSlides()[0].insertSheetsChartAsImage(foundSourceGraph).getAs("image/png");
+                        element.asImage().replace(imageBlob)
+		                    element.setDescription(alt)
+		                }
+	              }
+            } else if (match && match.length===3 && match[1]==='Render' && parseType==='monthBasedList') {
+                var sourceIds = match[2].split(",")
+                Logger.log("Render " + sourceIds)
 
-        } else {
-          Logger.log("Couldn't match " + alt)
+	              if (element.getPageElementType() == "IMAGE") {
+                    graphConfig = "{}"
+                    // Strip out any newlines 
+                    cleanAltString = alt.replace(/(\r\n|\n|\r)/gm, "");
+
+                    var renderRegExp = new RegExp('.*(Render): ([^\\s]+) (.*)$', "i");
+                    Logger.log("Matching against :" + cleanAltString)
+                    var renderMatch = renderRegExp.exec(cleanAltString);
+                    Logger.log("RenderMatch = " + renderMatch.length)
+                    if (renderMatch.length === 4) {
+                      graphConfig = renderMatch[3]
+                    }
+                    var imageBlob = createGraphBlob(configuration, sourceIds, graphConfig)
+                    element.asImage().replace(imageBlob)
+     	            element.setDescription(alt)
+                }
+            } else {
+                Logger.log("Couldn't match " + alt)
+            }
+        } catch (err) {
+            ui = SpreadsheetApp.getUi()
+            var response = ui.alert('Errors occurred during processing of slide ' + slideNumber + ", element " + i,
+                                    "Alt text:\n" + alt + "\n\n" +
+                                    "Error:\n" + err,
+                                    ui.ButtonSet.OK_CANCEL)
+	          if (response ==  ui.Button.CANCEL) {
+                return
+            }
         }
-   } // elements loop
+    }// elements loop
+
+   return
 }
 
 
@@ -242,7 +257,7 @@ function publishDataToGoogleSlideFile(documentUrl, configuration) {
     var slides = slideDoc.getSlides()
     var tmpSlidesDoc = SlidesApp.create("temp_slide_for_image")
     for (var i = 0; i < slides.length; i++) {
-        publishDataToGoogleSlideFile_processSlide(slides[i], configuration, tmpSlidesDoc)
+        publishDataToGoogleSlideFile_processSlide(i+1, slides[i], configuration, tmpSlidesDoc)
     }
     DriveApp.getFileById(tmpSlidesDoc.getId()).setTrashed(true);
 }
