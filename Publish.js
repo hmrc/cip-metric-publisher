@@ -230,7 +230,7 @@ function publishDataToGoogleSlideFile_processSlide(slideNumber, slide, configura
                       graphConfig = renderMatch[3]
                     }
                     var imageBlob = createGraphBlob(configuration, sourceIds, graphConfig)
-                    element.asImage().replace(imageBlob)
+                    element.asImage().replace(imageBlob, true)
      	            element.setDescription(alt)
                 }
             } else {
