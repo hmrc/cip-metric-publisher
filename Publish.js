@@ -162,7 +162,7 @@ function publishDataToGoogleSlideFile_processSlide(slideNumber, slide, configura
         var alt = element.getDescription()
         try { 
         // Loop through elements identifying if any have Source references in the alt text
-            var regExp = new RegExp('.*(Source|RotateImage|Graph|Render): ([^\\s]+)', "i");
+            var regExp = new RegExp('.*(Source|RotateImage|Graph|Render|Table): ([^\\s]+)', "i");
 
             var match = regExp.exec(alt);
             Logger.log("Deciding on " + alt + " -------------------- " + match)
@@ -232,6 +232,13 @@ function publishDataToGoogleSlideFile_processSlide(slideNumber, slide, configura
                     var imageBlob = createGraphBlob(configuration, sourceIds, graphConfig)
                     element.asImage().replace(imageBlob, true)
      	            element.setDescription(alt)
+                }
+            } else if (match && match.length===3 && match[1]==='Table') {
+                var sourceId = match[2]
+                // If we've got a value for the Source, call the table handler function
+                if (valueMap[sourceId] && element.getPageElementType() == "TABLE") {
+                     var tableValues = JSON.parse(valueMap[sourceId])
+                     populateTable(element.asTable(), tableValues)
                 }
             } else {
                 Logger.log("Couldn't match " + alt)
