@@ -19,7 +19,7 @@ function test_getPagerDutyIncidentsByServiceAndTime() {
   var startDay = new Date("2023-05-01")
   var endDay = new Date("2023-05-31")
   var incidents = getPagerDutyIncidentsByServiceAndTime(cipMetrics_getPagerdutyAPIToken(), startDay, endDay, "PLHT544")
-  var filteredIncidents = filterIncidentsByTitleRegexp(incidents.incidents,"")
+  var filteredIncidents = filterIncidentsByTitleRegexp(incidents,"")
   Logger.log(incidents.incidents.length)
   Logger.log(filteredIncidents.length)
 }
@@ -47,8 +47,8 @@ function test_getPagerDutyTotalIncidentsByServiceAndTime() {
   Logger.log(total)
 }
 
-function getPagerDutyTotalIncidentsByServiceAndTime(pgToken,startDay,endDay,serviceIds,titleRegexp) {
-  var incidents = getPagerDutyIncidentsByServiceAndTime(pgToken, startDay, endDay, serviceIds).incidents
+function getPagerDutyTotalIncidentsByServiceAndTime(pgToken,startDay,endDay,serviceId,titleRegexp) {
+  var incidents = getPagerDutyIncidentsByServiceAndTime(pgToken, startDay, endDay, serviceId)
   var filteredIncidents = filterIncidentsByTitleRegexp(incidents,titleRegexp)
   return filteredIncidents.length
 }
@@ -60,8 +60,8 @@ function test_getPagerDutyIncidentsDurationByServiceAndTime() {
   Logger.log(duration)
 }
 
-function getPagerDutyIncidentsDurationByServiceAndTime(pgToken,startDay,endDay,serviceIds,titleRegexp) {
-  var incidents = getPagerDutyIncidentsByServiceAndTime(pgToken, startDay, endDay, serviceIds).incidents
+function getPagerDutyIncidentsDurationByServiceAndTime(pgToken,startDay,endDay,serviceId,titleRegexp) {
+  var incidents = getPagerDutyIncidentsByServiceAndTime(pgToken, startDay, endDay, serviceId)
   var filteredIncidents = filterIncidentsByTitleRegexp(incidents,titleRegexp)
   totalDuration = 0
   for (var i = 0; i < filteredIncidents.length; i++) {
@@ -78,31 +78,36 @@ function getPagerDutyIncidentsDurationByServiceAndTime(pgToken,startDay,endDay,s
   return totalDuration
 }
 
-function getPagerDutyIncidentsByServiceAndTime(pgToken,startDay,endDay,serviceIds) {
+function getPagerDutyIncidentsByServiceAndTime(pgToken,startDay,endDay,serviceId) {
   var formattedDay = toYYYYMMDD(startDay);
-//  var nextDay = day;
-//  nextDay.setDate(nextDay.getDate() + 1);
   var formattedNextDay = toYYYYMMDD(endDay);
+  var offset = 0
 
-  var MESSAGE_ENDPOINT = 'https://api.pagerduty.com/incidents?&limit=10000&since=' + formattedDay + '&until=' + formattedNextDay + '&service_ids%5B%5D=' + serviceIds + "";
-  var options = {
-      method: 'GET',
-      muteHttpExceptions: true,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/vnd.pagerduty+json;version=2',
-        'Authorization': 'Token token=' + pgToken
-      }
-    };
-  var res = UrlFetchApp.fetch(MESSAGE_ENDPOINT,options);
-  if (res.getResponseCode() != 200) {
-    throw new Error(
-      "Pagerduty get incidents failed with error code " + res.getResponseCode() + ": " + res
-    );
-  } else {
-//    Logger.log(res.getResponseCode());
+  var isMore = true
+  var incidents = []
+  while (isMore) { 
+    var MESSAGE_ENDPOINT = 'https://api.pagerduty.com/incidents?&offset=' + offset + '&limit=100&since=' + formattedDay + '&until=' + formattedNextDay + '&service_ids%5B%5D=' + serviceId + "";
+    var options = {
+        method: 'GET',
+        muteHttpExceptions: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/vnd.pagerduty+json;version=2',
+          'Authorization': 'Token token=' + pgToken
+        }
+      };
+    var res = UrlFetchApp.fetch(MESSAGE_ENDPOINT,options);
+    if (res.getResponseCode() != 200) {
+      throw new Error(
+        "Pagerduty get incidents failed with error code " + res.getResponseCode() + ": " + res + "\nWhilst querying : " + MESSAGE_ENDPOINT
+      );
+    } else {
+//      Logger.log(res.getResponseCode());
+    }
+    var jsonRes = JSON.parse(res);
+    isMore = jsonRes.more
+    incidents = incidents.concat(jsonRes.incidents)
+    offset += 100
   }
-  var jsonRes = JSON.parse(res);
-
-  return(jsonRes)
+  return(incidents)
 }
